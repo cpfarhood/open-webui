@@ -37,7 +37,7 @@ spec:
         memory: 2Gi
 
     # Replicas
-    replicaCount: 2
+    replicaCount: 1
 
     # Ingress disabled - using Gateway API HTTPRoute instead
     ingress:
