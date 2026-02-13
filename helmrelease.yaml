@@ -67,6 +67,12 @@ spec:
       # WebUI secret key for session encryption
       - name: WEBUI_SECRET_KEY
         value: "openwebui-secret-key-change-in-production"
+      # Home directory for UID 1000 (fixes getpwuid error)
+      - name: HOME
+        value: "/app/backend/data"
+      # PyTorch cache directory
+      - name: TORCHINDUCTOR_CACHE_DIR
+        value: "/app/backend/data/.cache/torch"
       # WebUI configuration
       - name: WEBUI_NAME
         value: "Open WebUI"
