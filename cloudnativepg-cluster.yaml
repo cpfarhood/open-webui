@@ -1,0 +1,77 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: open-webui-postgres
+  namespace: open-webui
+spec:
+  instances: 3
+
+  # PostgreSQL version
+  imageName: ghcr.io/cloudnative-pg/postgresql:16.2
+
+  # Bootstrap
+  bootstrap:
+    initdb:
+      database: openwebui
+      owner: openwebui
+      secret:
+        name: open-webui-db-credentials
+
+  # Storage
+  storage:
+    storageClass: ceph-block
+    size: 10Gi
+
+  # Resources
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+
+  # Monitoring
+  monitoring:
+    enablePodMonitor: true
+
+  # Backup configuration
+  backup:
+    barmanObjectStore:
+      destinationPath: s3://postgres-backups/open-webui
+      endpointURL: https://object.farh.net
+      s3Credentials:
+        accessKeyId:
+          name: open-webui-s3-backup-credentials
+          key: access_key
+        secretAccessKey:
+          name: open-webui-s3-backup-credentials
+          key: secret_key
+      wal:
+        compression: gzip
+        encryption: AES256
+      data:
+        compression: gzip
+        encryption: AES256
+    retentionPolicy: "30d"
+
+  # PostgreSQL configuration
+  postgresql:
+    parameters:
+      max_connections: "200"
+      shared_buffers: "128MB"
+      effective_cache_size: "512MB"
+      maintenance_work_mem: "64MB"
+      checkpoint_completion_target: "0.9"
+      wal_buffers: "4MB"
+      default_statistics_target: "100"
+      random_page_cost: "1.1"
+      effective_io_concurrency: "200"
+      work_mem: "2MB"
+      min_wal_size: "1GB"
+      max_wal_size: "4GB"
+
+  # Affinity rules
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname

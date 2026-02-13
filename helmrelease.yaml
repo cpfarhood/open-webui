@@ -1,0 +1,96 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: open-webui
+  namespace: open-webui
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: open-webui
+      version: 3.1.9
+      sourceRef:
+        kind: HelmRepository
+        name: open-webui
+        namespace: flux-system
+      interval: 12h
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # Open WebUI image configuration
+    image:
+      repository: ghcr.io/open-webui/open-webui
+      tag: main
+      pullPolicy: Always
+
+    # Resources
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        memory: 512Mi
+
+    # Replicas
+    replicaCount: 2
+
+    # Ingress disabled - using Gateway API HTTPRoute instead
+    ingress:
+      enabled: false
+
+    # Persistence for user data and configuration
+    persistence:
+      enabled: true
+      size: 5Gi
+      storageClass: ceph-block
+      accessModes:
+        - ReadWriteOnce
+
+    # PostgreSQL configuration
+    # Uses CloudNativePG cluster
+    postgresql:
+      enabled: false
+
+    # Environment variables
+    env:
+      # Database configuration
+      - name: DATABASE_URL
+        valueFrom:
+          secretKeyRef:
+            name: open-webui-db-credentials
+            key: uri
+      # Optional: Ollama base URL if using external Ollama
+      # - name: OLLAMA_BASE_URL
+      #   value: http://ollama.ollama.svc.cluster.local:11434
+      # WebUI configuration
+      - name: WEBUI_NAME
+        value: "Open WebUI"
+      - name: ENABLE_SIGNUP
+        value: "true"
+      - name: DEFAULT_USER_ROLE
+        value: "user"
+
+    # Service configuration
+    service:
+      type: ClusterIP
+      port: 8080
+
+    # Security context
+    podSecurityContext:
+      fsGroup: 1000
+      runAsUser: 1000
+      runAsNonRoot: true
+
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: false
+      runAsNonRoot: true
+      runAsUser: 1000
