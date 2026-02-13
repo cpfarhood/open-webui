@@ -64,6 +64,9 @@ spec:
           secretKeyRef:
             name: open-webui-db-credentials
             key: uri
+      # WebUI secret key for session encryption
+      - name: WEBUI_SECRET_KEY
+        value: "openwebui-secret-key-change-in-production"
       # WebUI configuration
       - name: WEBUI_NAME
         value: "Open WebUI"
